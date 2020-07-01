@@ -1,0 +1,9 @@
+.add-item {
+    margin: 10px 0px 10px 0px;
+}
+.card {
+    width: 100%;
+}
+input#done {
+    margin-right: 10px;
+}
