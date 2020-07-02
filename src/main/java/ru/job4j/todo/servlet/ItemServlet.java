@@ -128,7 +128,7 @@ public class ItemServlet extends HttpServlet {
             String descr = req.getParameter("descr");
             Date created = Timestamp.valueOf(req.getParameter("created"));
             boolean done = (req.getParameter("done") != null && req.getParameter("done").equals("on"));
-            HibStore.instOf().addItem(new Item(id, descr, created, done));
+            HibStore.instOf().updateItem(new Item(id, descr, created, done));
             return true;
         };
     }

@@ -12,7 +12,7 @@ import java.util.List;
  */
 public interface Store {
     void addItem(Item item);
-    void updateItem(int id, Item item);
+    void updateItem(Item item);
     void deleteItem(int id);
     List<Item> getItems();
     Item getItem(int id);

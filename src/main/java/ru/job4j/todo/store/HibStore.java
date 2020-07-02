@@ -2,6 +2,7 @@ package ru.job4j.todo.store;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -11,6 +12,7 @@ import ru.job4j.todo.model.Item;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -35,54 +37,65 @@ public class HibStore implements Store {
         return Lazy.INST;
     }
 
-    @Override
-    public void addItem(Item item) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.save(item);
-        session.getTransaction().commit();
-        session.close();
+    private <T> T tx(Function<Session, T> command) {
+        final Session session = sf.openSession();
+        final Transaction tx = session.beginTransaction();
+        try {
+            T result = command.apply(session);
+            tx.commit();
+            return result;
+        } catch (final Exception e) {
+            session.getTransaction().rollback();
+        } finally {
+            session.close();
+        }
+        return null;
     }
 
     @Override
-    public void updateItem(int id, Item item) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        session.update(item);
-        session.getTransaction().commit();
-        session.close();
+    public void addItem(Item item) {
+        this.tx(
+            session -> session.save(item)
+        );
+    }
+
+    @Override
+    public void updateItem(Item item) {
+        this.tx(
+           session -> {
+               session.update(item);
+               return null;
+           }
+        );
     }
 
     @Override
     public void deleteItem(int id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Item item = new Item();
-        item.setId(id);
-        session.delete(item);
-        session.getTransaction().commit();
-        session.close();
+        this.tx(
+           session -> {
+              Item item = new Item();
+              item.setId(id);
+              session.delete(item);
+              return null;
+           }
+        );
     }
 
     @Override
     public List<Item> getItems() {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        List result = session.createQuery("from ru.job4j.todo.model.Item").list();
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(
+           session -> session.createQuery("from ru.job4j.todo.model.Item").list()
+        );
     }
 
     @Override
     public Item getItem(int id) {
-        Session session = sf.openSession();
-        session.beginTransaction();
-        Query query = session.createQuery("from ru.job4j.todo.model.Item where id = :id");
-        query.setParameter("id", id);
-        Item result = (Item) query.uniqueResult();
-        session.getTransaction().commit();
-        session.close();
-        return result;
+        return this.tx(
+            session -> {
+                Query query = session.createQuery("from ru.job4j.todo.model.Item where id = :id");
+                query.setParameter("id", id);
+                return (Item) query.uniqueResult();
+            }
+        );
     }
 }
