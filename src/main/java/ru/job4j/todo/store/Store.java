@@ -1,6 +1,8 @@
 package ru.job4j.todo.store;
 
 import ru.job4j.todo.model.Item;
+import ru.job4j.todo.model.Role;
+import ru.job4j.todo.model.User;
 
 import java.util.List;
 
@@ -16,4 +18,13 @@ public interface Store {
     void deleteItem(int id);
     List<Item> getItems();
     Item getItem(int id);
+    void addUser(User user);
+    void updateUser(User user);
+    void deleteUser(int id);
+    User getUser(int id);
+    User getUserByEmail(String email);
+    User getUserByEmailAndPassword(String email, String password);
+    List<User> getUsers();
+    Role getRole(int id);
+    List<Role> getRoles();
 }

@@ -28,8 +28,11 @@ public class IndexFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+
         List<Item> items = HibStore.instOf().getItems();
         request.setAttribute("items", items);
+        request.setAttribute("user", req.getSession().getAttribute("user"));
         chain.doFilter(request, response);
     }
 }

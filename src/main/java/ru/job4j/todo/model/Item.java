@@ -21,13 +21,18 @@ public class Item {
     private Date created;
     private boolean done;
 
+    @ManyToOne()
+    @JoinColumn(name = "user_id")
+    private User author;
+
     public Item() { }
 
-    public Item(int id, String descr, Date created, boolean done) {
+    public Item(int id, String descr, Date created, boolean done, User author) {
         this.id = id;
         this.descr = descr;
         this.created = created;
         this.done = done;
+        this.author = author;
     }
 
     public int getId() {
@@ -56,6 +61,14 @@ public class Item {
 
     public void setDone(boolean done) {
        this.done = done;
+    }
+
+    public User getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(User author) {
+        this.author = author;
     }
 
     @Override

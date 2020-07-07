@@ -5,40 +5,42 @@
   Time: 18:42
   To change this template use File | Settings | File Templates.
 --%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jstl/fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://example.com/todo/functions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="<c:url value="/css/todo.css"/>" />
+    <%@include file="/templates/chunks/head-common.jsp"%>
     <title>Simple TODO list</title>
 </head>
 <body>
     <div class="container">
         <div class="row">
-            <a href="<c:url value="/item.do/add"/>" class="btn btn-info add-item">Add new item</a>
+            <c:import url="/templates/chunks/main-menu.jsp">
+                <c:param name="user" value="${user}" />
+            </c:import>
         </div>
     </div>
     <div class="container">
+        <c:if test="${fn:userCanAddItem(user)}">
+        <div class="row">
+            <a href="<c:url value="/item.do/add"/>" class="btn btn-info add-item">Add new item</a>
+        </div>
+        </c:if>
         <div class="row">
             <table class="table">
                 <thead>
-                <th scope="col">Description</th>
-                <th scope="col">Created</th>
-                <th scope="col">Done</th>
-                <th scope="col">Actions</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Done</th>
+                    <th scope="col">Actions</th>
                 </thead>
                 <tbody>
                 <c:forEach var="item" items="${items}">
                     <tr>
+                        <td><a href="<c:url value="/user/${item.author.name}/view"/>"><c:out value="${item.author.name}"/></a></td>
                         <td><c:out value="${item.descr}"/></td>
                         <td>
                             <fmt:formatDate value="${item.created}" type="both" pattern="dd.MM.yyyy HH:mm:ss" />
@@ -52,8 +54,12 @@
                             </c:if>
                         </td>
                         <td>
-                            <a href="<c:url value="/item.do/edit/${item.id}" />" class="btn btn-info">Edit</a>
-                            <a href="<c:url value="/item.do/delete/${item.id}" />" class="btn btn-info">Delete</a>
+                            <c:if test="${fn:userCanEditItem(user, item)}">
+                                <a href="<c:url value="/item.do/${item.id}/edit" />" class="btn btn-info">Edit</a>
+                            </c:if>
+                            <c:if test="${fn:userCanDeleteItem(user, item)}">
+                                <a href="<c:url value="/item.do/${item.id}/delete" />" class="btn btn-info">Delete</a>
+                            </c:if>
                         </td>
                     </tr>
                 </c:forEach>

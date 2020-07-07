@@ -2,6 +2,7 @@ package ru.job4j.todo.servlet;
 
 import org.json.simple.JSONObject;
 import ru.job4j.todo.model.Item;
+import ru.job4j.todo.model.User;
 import ru.job4j.todo.store.HibStore;
 
 import javax.servlet.ServletException;
@@ -41,10 +42,14 @@ public class ItemServlet extends HttpServlet {
 
     protected BiFunction<HttpServletRequest, HttpServletResponse, Boolean> doGetAddItemAction() {
         return (req, resp) -> {
-            req.setAttribute("form_title", "New item");
-            req.setAttribute("form_action", "/item.do/add");
-            req.setAttribute("item", new Item(0, "", new Timestamp(System.currentTimeMillis()), false));
             try {
+                if (!User.userCanAddItem((User) req.getSession().getAttribute("user"))) {
+                    resp.sendRedirect(req.getContextPath() + "/user.do/login");
+                    return false;
+                }
+                req.setAttribute("form_title", "New item");
+                req.setAttribute("form_action", "/item.do/add");
+                req.setAttribute("item", new Item(0, "", new Timestamp(System.currentTimeMillis()), false, null));
                 req.getRequestDispatcher("/templates/item/edit.jsp").forward(req, resp);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -56,10 +61,16 @@ public class ItemServlet extends HttpServlet {
     protected BiFunction<HttpServletRequest, HttpServletResponse, Boolean> doGetEditItemAction() {
         return (req, resp) -> {
             int id = (Integer) req.getAttribute("id");
-            req.setAttribute("form_title", "Edit item");
-            req.setAttribute("form_action", "/item.do/edit/" + id);
-            req.setAttribute("item", HibStore.instOf().getItem(id));
+            Item item = HibStore.instOf().getItem(id);
+            User user = (User) req.getSession().getAttribute("user");
             try {
+                if (!User.userCanEditItem(user, item)) {
+                    resp.sendRedirect(req.getContextPath() + "/user.do/login");
+                    return false;
+                }
+                req.setAttribute("form_title", "Edit item");
+                req.setAttribute("form_action", "/item.do/" + id + "/edit");
+                req.setAttribute("item", item);
                 req.getRequestDispatcher("/templates/item/edit.jsp").forward(req, resp);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -71,10 +82,16 @@ public class ItemServlet extends HttpServlet {
     protected BiFunction<HttpServletRequest, HttpServletResponse, Boolean> doGetDeleteItemAction() {
         return (req, resp) -> {
             int id = (Integer) req.getAttribute("id");
-            req.setAttribute("form_title", "Delete item");
-            req.setAttribute("form_action", "/item.do/delete/" + id);
-            req.setAttribute("item", HibStore.instOf().getItem(id));
+            Item item = HibStore.instOf().getItem(id);
+            User user = (User) req.getSession().getAttribute("user");
             try {
+                if (!User.userCanDeleteItem(user, item)) {
+                    resp.sendRedirect(req.getContextPath() + "/user.do/login");
+                    return false;
+                }
+                req.setAttribute("form_title", "Delete item");
+                req.setAttribute("form_action", "/item.do/" + id + "/delete");
+                req.setAttribute("item", item);
                 req.getRequestDispatcher("/templates/item/delete.jsp").forward(req, resp);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -117,7 +134,8 @@ public class ItemServlet extends HttpServlet {
             String descr = req.getParameter("descr");
             Date created = Timestamp.valueOf(req.getParameter("created"));
             boolean done = (req.getParameter("done") != null && req.getParameter("done").equals("on"));
-            HibStore.instOf().addItem(new Item(0, descr, created, done));
+            User author = (User) req.getSession().getAttribute("user");
+            HibStore.instOf().addItem(new Item(0, descr, created, done, author));
             return true;
         };
     }
@@ -128,7 +146,8 @@ public class ItemServlet extends HttpServlet {
             String descr = req.getParameter("descr");
             Date created = Timestamp.valueOf(req.getParameter("created"));
             boolean done = (req.getParameter("done") != null && req.getParameter("done").equals("on"));
-            HibStore.instOf().updateItem(new Item(id, descr, created, done));
+            User author = (User) req.getSession().getAttribute("user");
+            HibStore.instOf().updateItem(new Item(id, descr, created, done, author));
             return true;
         };
     }
