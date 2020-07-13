@@ -20,7 +20,7 @@
             <c:import url="/templates/chunks/main-menu.jsp">
                 <c:param name="user" value="${user}" />
             </c:import>
-        </div>
+        </div>d
     </div>
     <div class="container">
         <c:if test="${fn:userCanAddItem(user)}">
